@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+  <bean id="activeMQConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+      <property name="brokerURL" value="tcp://192.168.188.128:61616"/>
+  </bean>
+    <bean id="singleConnectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">
+        <property name="targetConnectionFactory" ref="activeMQConnectionFactory"/>
+    </bean>
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="singleConnectionFactory"/>
+    </bean>
+<!--    创建一个队列,当点击审核通过的时候,发送审核通过商品信息到消息队列-->
+    <bean id="dongyimai_queue_solr" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg value="dongyimai_queue_solr"/>
+    </bean>
+<!--    创建一个队列,用于删除-->
+    <bean id="dongyimai_queue_delete_solr" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg value="dongyimai_queue_delete_solr"/>
+    </bean>
+<!--创建一个主题,接收审核通过,传递给页面生成服务-->
+    <bean id="dongyimai_topic_page" class="org.apache.activemq.command.ActiveMQTopic">
+        <constructor-arg value="dongyimai_topic_page"/>
+    </bean>
+</beans>

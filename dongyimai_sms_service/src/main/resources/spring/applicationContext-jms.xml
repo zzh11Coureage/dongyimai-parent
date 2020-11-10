@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder ignore-unresolvable="true" location="classpath:properties/sms.properties"/>
+    <context:component-scan base-package="com.offcn.sms"/>
+    <bean id="activeMQConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="tcp://192.168.188.128:61616"/>
+    </bean>
+    <bean id="singleConnectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">
+        <property name="targetConnectionFactory" ref="activeMQConnectionFactory"/>
+    </bean>
+
+    <!--配置消息监听的队列-->
+    <bean id="dongyimai_queue_sms" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg value="dongyimai_queue_sms"/>
+    </bean>
+
+
+    <!--配置监听容器-->
+    <bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="singleConnectionFactory"/>
+        <property name="destination" ref="dongyimai_queue_sms"/>
+        <property name="messageListener" ref="reciveSmsSendMsgListener"/>
+    </bean>
+</beans>

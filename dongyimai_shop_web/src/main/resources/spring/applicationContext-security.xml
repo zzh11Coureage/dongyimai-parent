@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+   <!--配置静态资源不拦截-->
+    <http pattern="/css/**" security="none"/>
+    <http pattern="/img/**" security="none"/>
+    <http pattern="/js/**" security="none"/>
+    <http pattern="/plugins/**" security="none"/>
+
+    <!--放行注册页面，以及注册要调用后台地址-->
+    <http pattern="/register.html" security="none"/>
+    <http pattern="/seller/add.do" security="none"/>
+    <http pattern="/shoplogin.html" security="none"/>
+    <http pattern="/logout.html" security="none"/>
+<!-- 临时放行图片上传-->
+    <http pattern="/upload.do" security="none"/>
+    <!--声明密码加密器-->
+  <beans:bean id="bCryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+    <http use-expressions="false">
+        <intercept-url pattern="/**" access="ROLE_SELLER"/>
+        <form-login login-page="/shoplogin.html" default-target-url="/admin/index.html" always-use-default-target="true"/>
+        <csrf disabled="true"/>
+        <headers>
+            <frame-options policy="SAMEORIGIN"></frame-options>
+        </headers>
+        <logout logout-url="/buwanle" />
+    </http>
+
+    <!--声明自定义认证类到当前spring框架-->
+    <beans:bean id="userDetail" class="com.offcn.user.UserDetailImpl">
+        <!--注入远程商家服务对象-->
+        <beans:property name="sellerService" ref="sellerService"/>
+    </beans:bean>
+
+    <!--声明dubbo远程调用-->
+    <dubbo:application name="shopWeb">
+        <dubbo:parameter key="qos.enable" value="false"/>
+    </dubbo:application>
+
+    <dubbo:registry address="zookeeper://192.168.188.128:2181"/>
+
+    <dubbo:annotation />
+
+    <!--采用声明方式进行远程调用-->
+    <dubbo:reference id="sellerService" interface="com.offcn.sellergoods.service.SellerService"/>
+    <authentication-manager>
+        <authentication-provider user-service-ref="userDetail">
+            <!--注入密码加密器-->
+            <password-encoder ref="bCryptPasswordEncoder"/>
+        </authentication-provider>
+    </authentication-manager>
+
+
+</beans:beans>
